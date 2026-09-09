@@ -1,0 +1,15 @@
+transformers
+datasets
+spacy
+pdfplumber
+pytesseract
+pdf2image
+pandas
+torch
+fastapi
+uvicorn[standard]
+celery
+langchain
+
+#vecter db
+pinecone_client
