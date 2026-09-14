@@ -2,6 +2,7 @@ import pdfplumber
 import pytesseract
 from pdf2image import convert_from_path
 
+
 def extract_text_native(pdf_path: str) -> str:
     text_chunks = []
     with pdfplumber.open(pdf_path) as pdf:
@@ -10,6 +11,7 @@ def extract_text_native(pdf_path: str) -> str:
             if page_text:
                 text_chunks.append(page_text)
     return "\n".join(text_chunks)
+
 
 def extract_text_ocr(pdf_path: str, dpi: int = 300) -> str:
     text_chunks = []
@@ -20,16 +22,17 @@ def extract_text_ocr(pdf_path: str, dpi: int = 300) -> str:
         print(f"  OCR'd page {i + 1}/{len(pages)}")
     return "\n".join(text_chunks)
 
-def ingest_pdf(pdf_path: str, min_chars_for_native: int = 50):
+
+def ingest_pdf(pdf_path: str, min_chars_for_native: int = 50) -> dict:
     print(f"Ingesting: {pdf_path}")
     native_text = extract_text_native(pdf_path)
 
     if len(native_text.strip()) >= min_chars_for_native:
-        print("  -> Native text layer found, used pdfplumber.")
+        print("  Native text layer found, used pdfplumber.")
         method = "native"
         final_text = native_text
     else:
-        print("  -> No usable text layer, falling back to OCR (this is slower).")
+        print("  No usable text layer, falling back to OCR (this is slower).")
         method = "ocr"
         final_text = extract_text_ocr(pdf_path)
 
@@ -43,5 +46,4 @@ def ingest_pdf(pdf_path: str, min_chars_for_native: int = 50):
 
 
 if __name__ == "__main__":
-    print("Module ready to use ")
-
+    print("Module ready to use")
