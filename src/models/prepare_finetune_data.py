@@ -1,5 +1,5 @@
 import json
-from sklearn.model_selection  import train_test_Split
+from sklearn.model_selection  import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
 INPUT_PATH = 'E:\AI- Powered Contract Intelligence & Risk Scoring\cuad_processed.json'
@@ -41,7 +41,7 @@ def main ():
         json.dump(label_mapping, f, indent=2)
     print(f"Saved {len(label_mapping)} label classes to {LABEL_MAP_PATH}")
 
-    train_rows, test_rows = train_test_Split(
+    train_rows, test_rows = train_test_split(
         rows, test_size = 0.15, random_state = 42, stratify = [r["label_id"] for r in rows]
     )
 
