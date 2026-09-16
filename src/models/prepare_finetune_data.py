@@ -33,3 +33,28 @@ def main ():
 
     label_encoder = LabelEncoder()
     labels_encoded = label_encoder.fit_transform([r["label"] for r in rows])
+    for row, label_id in zip(rows, labels_encoded):
+        row["label_id"] = int(label_id)
+
+    label_mapping = {int(i): cls for i, cls in enumerate(label_encoder.classes_)}
+    with open (LABEL_MAP_PATH, "w", encoding="utf-8") as f:
+        json.dump(label_mapping, f, indent=2)
+    print(f"Saved {len(label_mapping)} label classes to {LABEL_MAP_PATH}")
+
+    train_rows, test_rows = train_test_Split(
+        rows, test_size = 0.15, random_state = 42, stratify = [r["label_id"] for r in rows]
+    )
+
+    print(f"Train: {len(train_rows)} | Test : {len(test_rows)}")
+
+    with open (OUTPUT_TRAIN, "w", encoding="utf-8") as f:
+        json.dump(train_rows, f, indent=2)
+
+    with open (OUTPUT_TEST, "w", encoding="utf-8") as f:
+        json.dump(test_rows, f, indent=2)
+
+    print(f"\n Saved {OUTPUT_TRAIN} and {OUTPUT_TEST}")
+    print("Ready for the fine-tunning")
+
+if __name__ == "__main__":
+    main()
