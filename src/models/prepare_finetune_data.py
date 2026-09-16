@@ -2,10 +2,10 @@ import json
 from sklearn.model_selection  import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
-INPUT_PATH = 'E:\AI- Powered Contract Intelligence & Risk Scoring\cuad_processed.json'
-OUTPUT_TRAIN = "/content/clause_train.json"
-OUTPUT_TEST = "/content/clause_test.json"
-LABEL_MAP_PATH = "/content/label_mapping.json"
+INPUT_PATH = '/content/AI--Powered-Contract-Intelligence-Risk-Scoring/cuad_processed.json'
+OUTPUT_TRAIN = "/content/AI--Powered-Contract-Intelligence-Risk-Scoring/clause_train.json"
+OUTPUT_TEST = "/content/AI--Powered-Contract-Intelligence-Risk-Scoring/clause_test.json"
+LABEL_MAP_PATH = "/content/AI--Powered-Contract-Intelligence-Risk-Scoring/label_mapping.json"
 
 MIN_CHARS = 15
 
