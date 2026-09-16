@@ -13,7 +13,7 @@ def faltten_contracts(contracts: list):
 
     rows =[]
     for contract in contracts:
-        for clause in contract['clause']:
+        for clause in contract['clauses']:
             text = clause["text"].strip()
             if len(text) >= MIN_CHARS:
                 rows.append({
