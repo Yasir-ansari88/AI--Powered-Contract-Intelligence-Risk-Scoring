@@ -4,7 +4,7 @@ from datasets import Dataset
 from transformers import (
     AutoTokenizer,
     AutoModelForSequenceClassification,
-    TrainingArgumnets,
+    TrainingArguments,
     Trainer
 )
 import evaluate
