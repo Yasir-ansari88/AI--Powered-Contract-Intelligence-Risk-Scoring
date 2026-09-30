@@ -8,8 +8,10 @@ pandas
 torch
 fastapi
 uvicorn[standard]
+python-multipart
+scikit-learn
+evaluate
+sentence-transformers
+pinecone
 celery
 langchain
-
-#vecter db
-pinecone_client
