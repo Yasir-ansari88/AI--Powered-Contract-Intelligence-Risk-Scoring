@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contract Intelligence — Review Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF0E5;
+    --panel:#E2E5D6;
+    --ink:#1E2430;
+    --ink-soft:#565F55;
+    --rule:#C9CDBA;
+    --oxblood:#6F2A2A;
+    --oxblood-dark:#551F1F;
+    --green:#3D6B4A;
+    --green-bg:#E4EBE0;
+    --amber:#A9642B;
+    --amber-bg:#F1E7D6;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans',sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .sheet{
+    max-width:760px;
+    margin:0 auto;
+    padding:72px 28px 120px;
+  }
+  header{
+    border-bottom:1px solid var(--rule);
+    padding-bottom:28px;
+    margin-bottom:44px;
+  }
+  h1{
+    font-family:'Source Serif 4',serif;
+    font-weight:700;
+    font-size:2.15rem;
+    margin:0 0 10px;
+    letter-spacing:-0.01em;
+  }
+  header p{
+    margin:0;
+    color:var(--ink-soft);
+    font-size:1.02rem;
+    max-width:52ch;
+  }
+  h2{
+    font-family:'Source Serif 4',serif;
+    font-weight:600;
+    font-size:1.3rem;
+    margin:0 0 18px;
+  }
+  section{margin-bottom:56px;}
+
+  .dropzone{
+    border:1.5px dashed var(--rule);
+    background:var(--panel);
+    border-radius:2px;
+    padding:32px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    flex-wrap:wrap;
+  }
+  .dropzone.dragover{border-color:var(--oxblood);background:#E8E2D2;}
+  .dz-text strong{display:block;font-size:1.02rem;margin-bottom:4px;}
+  .dz-text span{color:var(--ink-soft);font-size:0.92rem;}
+  input[type=file]{display:none;}
+
+  .btn{
+    font-family:'IBM Plex Sans',sans-serif;
+    font-weight:600;
+    font-size:0.95rem;
+    border:none;
+    border-radius:2px;
+    padding:12px 22px;
+    cursor:pointer;
+    background:var(--oxblood);
+    color:#F7F3E9;
+    transition:background 0.15s ease;
+  }
+  .btn:hover{background:var(--oxblood-dark);}
+  .btn:disabled{background:#A99; cursor:not-allowed; opacity:0.6;}
+  .btn.secondary{
+    background:transparent;
+    color:var(--ink);
+    border:1px solid var(--rule);
+  }
+  .btn.secondary:hover{border-color:var(--ink);}
+
+  .status-line{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:18px;
+    font-size:0.92rem;
+    color:var(--ink-soft);
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--amber);
+    animation:pulse 1.2s ease-in-out infinite;
+  }
+  .dot.done{background:var(--green);animation:none;}
+  .dot.failed{background:var(--oxblood);animation:none;}
+  @keyframes pulse{
+    0%,100%{opacity:1;}
+    50%{opacity:0.35;}
+  }
+
+  .meta-row{
+    display:flex;
+    gap:28px;
+    margin-bottom:24px;
+    font-size:0.9rem;
+    color:var(--ink-soft);
+    flex-wrap:wrap;
+  }
+  .meta-row b{color:var(--ink);font-weight:600;}
+
+  .chip-group{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px;}
+  .chip{
+    border:1px solid var(--rule);
+    background:var(--panel);
+    padding:5px 11px;
+    border-radius:2px;
+    font-size:0.85rem;
+  }
+  .chip small{color:var(--ink-soft);margin-right:6px;}
+
+  .clause{
+    border-left:3px solid var(--rule);
+    padding:6px 0 6px 18px;
+    margin-bottom:22px;
+  }
+  .clause.ok{border-left-color:var(--green);}
+  .clause.needs_review{border-left-color:var(--amber);}
+  .clause-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:12px;
+    margin-bottom:6px;
+  }
+  .clause-type{font-weight:600;font-size:0.98rem;}
+  .badge{
+    font-size:0.78rem;
+    font-variant-numeric:tabular-nums;
+    padding:2px 8px;
+    border-radius:2px;
+    white-space:nowrap;
+  }
+  .badge.ok{background:var(--green-bg);color:var(--green);}
+  .badge.needs_review{background:var(--amber-bg);color:var(--amber);}
+  .clause-text{color:var(--ink-soft);font-size:0.92rem;}
+
+  .search-row{display:flex;gap:10px;margin-bottom:28px;}
+  .search-row input[type=text]{
+    flex:1;
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:0.95rem;
+    padding:12px 14px;
+    border:1px solid var(--rule);
+    border-radius:2px;
+    background:#fff;
+    color:var(--ink);
+  }
+  .search-row input[type=text]:focus{outline:none;border-color:var(--oxblood);}
+
+  .result{
+    padding:14px 0;
+    border-bottom:1px solid var(--rule);
+  }
+  .result:last-child{border-bottom:none;}
+  .result-head{
+    display:flex;
+    justify-content:space-between;
+    font-size:0.95rem;
+    margin-bottom:5px;
+  }
+  .result-head b{font-weight:600;}
+  .result-head span{color:var(--ink-soft);font-variant-numeric:tabular-nums;}
+  .result p{margin:0;color:var(--ink-soft);font-size:0.92rem;}
+
+  .empty{color:var(--ink-soft);font-size:0.92rem;font-style:italic;}
+  .error-box{
+    background:var(--amber-bg);
+    border:1px solid var(--amber);
+    color:var(--oxblood-dark);
+    padding:14px 16px;
+    border-radius:2px;
+    font-size:0.9rem;
+  }
+
+  footer{
+    border-top:1px solid var(--rule);
+    padding-top:20px;
+    color:var(--ink-soft);
+    font-size:0.85rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <header>
+    <h1>Contract Intelligence — Review Desk</h1>
+    <p>Upload a contract for automated clause classification and entity extraction, or search prior clauses by meaning.</p>
+  </header>
+
+  <section id="upload-section">
+    <h2>Submit a contract</h2>
+    <div class="dropzone" id="dropzone">
+      <div class="dz-text">
+        <strong id="filename-label">Drop a PDF here, or choose a file</strong>
+        <span>Only PDF contracts are accepted.</span>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn secondary" id="choose-btn" type="button">Choose file</button>
+        <button class="btn" id="upload-btn" type="button" disabled>Review contract</button>
+      </div>
+      <input type="file" id="file-input" accept="application/pdf">
+    </div>
+    <div class="status-line" id="status-line" style="display:none;">
+      <span class="dot" id="status-dot"></span>
+      <span id="status-text">Queued…</span>
+    </div>
+    <div id="error-area"></div>
+  </section>
+
+  <section id="results-section" style="display:none;">
+    <h2>Findings</h2>
+    <div class="meta-row">
+      <div><b>Extraction:</b> <span id="extraction-method">—</span></div>
+      <div><b>Clauses reviewed:</b> <span id="num-chunks">—</span></div>
+    </div>
+
+    <div id="entities-area"></div>
+    <div id="clauses-area"></div>
+  </section>
+
+  <section id="search-section">
+    <h2>Search precedent clauses</h2>
+    <div class="search-row">
+      <input type="text" id="search-input" placeholder="e.g. either party may terminate without cause">
+      <button class="btn" id="search-btn" type="button">Search</button>
+    </div>
+    <div id="search-results"></div>
+  </section>
+
+  <footer>
+    Contract Intelligence &amp; Risk Scoring — internal review tool.
+  </footer>
+</div>
+
+<script>
+  // Change this if your API runs on a different host/port.
+  const API_BASE = "http://127.0.0.1:8001";
+
+  const fileInput = document.getElementById('file-input');
+  const chooseBtn = document.getElementById('choose-btn');
+  const uploadBtn = document.getElementById('upload-btn');
+  const dropzone = document.getElementById('dropzone');
+  const filenameLabel = document.getElementById('filename-label');
+  const statusLine = document.getElementById('status-line');
+  const statusDot = document.getElementById('status-dot');
+  const statusText = document.getElementById('status-text');
+  const errorArea = document.getElementById('error-area');
+  const resultsSection = document.getElementById('results-section');
+  const extractionMethodEl = document.getElementById('extraction-method');
+  const numChunksEl = document.getElementById('num-chunks');
+  const entitiesArea = document.getElementById('entities-area');
+  const clausesArea = document.getElementById('clauses-area');
+
+  let selectedFile = null;
+  let pollTimer = null;
+
+  chooseBtn.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) setSelectedFile(fileInput.files[0]);
+  });
+
+  ['dragover'].forEach(evt => dropzone.addEventListener(evt, (e) => {
+    e.preventDefault();
+    dropzone.classList.add('dragover');
+  }));
+  ['dragleave', 'drop'].forEach(evt => dropzone.addEventListener(evt, (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+  }));
+  dropzone.addEventListener('drop', (e) => {
+    if (e.dataTransfer.files.length) setSelectedFile(e.dataTransfer.files[0]);
+  });
+
+  function setSelectedFile(file) {
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      showError('Only PDF files are supported.');
+      return;
+    }
+    selectedFile = file;
+    filenameLabel.textContent = file.name;
+    uploadBtn.disabled = false;
+    errorArea.innerHTML = '';
+  }
+
+  function showError(message) {
+    errorArea.innerHTML = `<div class="error-box" style="margin-top:16px;">${message}</div>`;
+  }
+
+  uploadBtn.addEventListener('click', async () => {
+    if (!selectedFile) return;
+    errorArea.innerHTML = '';
+    resultsSection.style.display = 'none';
+    uploadBtn.disabled = true;
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const res = await fetch(`${API_BASE}/contracts/upload`, { method: 'POST', body: formData });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `Upload failed (status ${res.status})`);
+      }
+      const data = await res.json();
+      statusLine.style.display = 'flex';
+      setStatus('queued', 'Queued…');
+      pollJob(data.job_id);
+    } catch (e) {
+      showError(`Could not reach the API. Is it running at ${API_BASE}? (${e.message})`);
+      uploadBtn.disabled = false;
+    }
+  });
+
+  function setStatus(kind, text) {
+    statusDot.className = 'dot' + (kind === 'done' ? ' done' : kind === 'failed' ? ' failed' : '');
+    statusText.textContent = text;
+  }
+
+  function pollJob(jobId) {
+    clearInterval(pollTimer);
+    pollTimer = setInterval(async () => {
+      try {
+        const res = await fetch(`${API_BASE}/contracts/${jobId}`);
+        const data = await res.json();
+
+        if (data.status === 'queued') setStatus('queued', 'Queued…');
+        else if (data.status === 'processing') setStatus('processing', 'Reading and classifying clauses…');
+        else if (data.status === 'done') {
+          clearInterval(pollTimer);
+          setStatus('done', 'Review complete.');
+          uploadBtn.disabled = false;
+          renderResults(data);
+        } else if (data.status === 'failed') {
+          clearInterval(pollTimer);
+          setStatus('failed', 'Processing failed.');
+          uploadBtn.disabled = false;
+          showError(data.error || 'Something went wrong while processing this contract.');
+        }
+      } catch (e) {
+        clearInterval(pollTimer);
+        showError('Lost connection to the API while checking status.');
+        uploadBtn.disabled = false;
+      }
+    }, 2000);
+  }
+
+  function renderResults(data) {
+    resultsSection.style.display = 'block';
+    extractionMethodEl.textContent = data.extraction_method || '—';
+    numChunksEl.textContent = data.num_chunks ?? '—';
+
+    const entities = data.entities || [];
+    if (entities.length === 0) {
+      entitiesArea.innerHTML = '<p class="empty">No entities detected.</p>';
+    } else {
+      const chips = entities.map(e => `<span class="chip"><small>${e.label}</small>${escapeHtml(e.text)}</span>`).join('');
+      entitiesArea.innerHTML = `<div class="chip-group">${chips}</div>`;
+    }
+
+    const clauses = data.clauses || [];
+    if (clauses.length === 0) {
+      clausesArea.innerHTML = '<p class="empty">No clauses classified.</p>';
+      return;
+    }
+    clausesArea.innerHTML = clauses.map(c => `
+      <div class="clause ${c.status}">
+        <div class="clause-head">
+          <span class="clause-type">${escapeHtml(c.predicted_clause_type)}</span>
+          <span class="badge ${c.status}">${c.status === 'ok' ? 'confident' : 'needs review'} · ${(c.confidence * 100).toFixed(0)}%</span>
+        </div>
+        <div class="clause-text">${escapeHtml(c.text_preview)}</div>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('search-btn').addEventListener('click', runSearch);
+  document.getElementById('search-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') runSearch();
+  });
+
+  async function runSearch() {
+    const query = document.getElementById('search-input').value.trim();
+    const resultsEl = document.getElementById('search-results');
+    if (!query) return;
+    resultsEl.innerHTML = '<p class="empty">Searching…</p>';
+
+    try {
+      const res = await fetch(`${API_BASE}/search?q=${encodeURIComponent(query)}`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `Search failed (status ${res.status})`);
+      }
+      const matches = await res.json();
+      if (matches.length === 0) {
+        resultsEl.innerHTML = '<p class="empty">No matches found.</p>';
+        return;
+      }
+      resultsEl.innerHTML = matches.map(m => `
+        <div class="result">
+          <div class="result-head"><b>${escapeHtml(m.clause_type)}</b><span>${(m.score * 100).toFixed(1)}% match</span></div>
+          <p>${escapeHtml(m.text)}</p>
+        </div>
+      `).join('');
+    } catch (e) {
+      resultsEl.innerHTML = `<div class="error-box">${e.message}</div>`;
+    }
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str ?? '';
+    return div.innerHTML;
+  }
+</script>
+
+</body>
+</html>

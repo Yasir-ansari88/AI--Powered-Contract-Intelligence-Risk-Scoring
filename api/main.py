@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import sys
 import uuid
@@ -7,9 +8,11 @@ from pathlib import Path
 import spacy
 import torch
 from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]  
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]        
 SRC_DIR = PROJECT_ROOT / "src"                             
 MODEL_DIR = SRC_DIR / "models" / "clause_classifier_model"
 UPLOAD_DIR = Path(__file__).resolve().parent / "uploads"
@@ -19,9 +22,16 @@ sys.path.append(str(SRC_DIR / "ingestion"))
 from ocr_pipline import ingest_pdf  
 
 CONFIDENCE_THRESHOLD = 0.60
-CHUNK_WORD_SIZE = 150  
+CHUNK_WORD_SIZE = 150 
 
 app = FastAPI(title="Contract Intelligence & Risk Scoring API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 jobs = {}
 
@@ -35,6 +45,7 @@ INDEX_NAME = "contract-clauses"
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 ENTITY_LABELS = {"ORG", "DATE", "MONEY", "GPE", "LAW"}
 
+
 @app.on_event("startup")
 def load_model():
     global tokenizer, model, nlp
@@ -46,6 +57,7 @@ def load_model():
     print("Loading spaCy model for entity extraction ...")
     nlp = spacy.load("en_core_web_sm")
     print("spaCy loaded.")
+
 
 def get_search_components():
     global embedder, pinecone_index
@@ -59,19 +71,27 @@ def get_search_components():
         pinecone_index = Pinecone(api_key=api_key).Index(INDEX_NAME)
     return embedder, pinecone_index
 
+
 def extract_entities(text: str) -> list:
     doc = nlp(text[:100_000])
     seen, entities = set(), []
     for ent in doc.ents:
         key = (ent.text, ent.label_)
-        if ent.label_ in ENTITY_LABELS and key not in seen:
+        if ent.label_ in ENTITY_LABELS and key not in seen and len(ent.text) <= 60:
             seen.add(key)
             entities.append({"text": ent.text, "label": ent.label_})
     return entities
 
+
+def clean_clause_label(raw_label: str) -> str:
+    match = re.search(r'"([^"]+)"', raw_label)
+    return match.group(1) if match else raw_label
+
+
 def chunk_text(text: str, max_words: int = CHUNK_WORD_SIZE) -> list:
     words = text.split()
     return [" ".join(words[i:i + max_words]) for i in range(0, len(words), max_words)]
+
 
 def classify_chunk(text: str) -> tuple:
     inputs = tokenizer(text, truncation=True, padding=True, max_length=256, return_tensors="pt")
@@ -79,8 +99,9 @@ def classify_chunk(text: str) -> tuple:
         logits = model(**inputs).logits
     probs = torch.softmax(logits, dim=-1)
     confidence, pred_id = torch.max(probs, dim=-1)
-    label = model.config.id2label[pred_id.item()]
-    return label, confidence.item()
+    raw_label = model.config.id2label[pred_id.item()]
+    return clean_clause_label(raw_label), confidence.item()
+
 
 def process_document(job_id: str, pdf_path: str):
     jobs[job_id]["status"] = "processing"
@@ -114,6 +135,7 @@ def process_document(job_id: str, pdf_path: str):
 def health():
     return {"status": "ok"}
 
+
 @app.post("/contracts/upload")
 async def upload_contract(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
     if not file.filename.lower().endswith(".pdf"):
@@ -129,6 +151,7 @@ async def upload_contract(background_tasks: BackgroundTasks, file: UploadFile = 
 
     return {"job_id": job_id, "status": "queued"}
 
+
 @app.get("/search")
 def search_clauses(q: str, top_k: int = 5):
     emb, index = get_search_components()
@@ -137,11 +160,12 @@ def search_clauses(q: str, top_k: int = 5):
     return [
         {
             "score": round(m["score"], 4),
-            "clause_type": m["metadata"]["clause_type"],
+            "clause_type": clean_clause_label(m["metadata"]["clause_type"]),
             "text": m["metadata"]["text"],
         }
         for m in results["matches"]
     ]
+
 
 @app.get("/contracts/{job_id}")
 def get_contract_result(job_id: str):

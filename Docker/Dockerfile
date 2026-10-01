@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-# System dependencies needed for OCR (pdf2image + pytesseract)
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     poppler-utils \
     tesseract-ocr \
