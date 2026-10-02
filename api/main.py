@@ -11,7 +11,6 @@ from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]        
 SRC_DIR = PROJECT_ROOT / "src"                             
 MODEL_DIR = SRC_DIR / "models" / "clause_classifier_model"
