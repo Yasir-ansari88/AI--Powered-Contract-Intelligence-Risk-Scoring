@@ -22,10 +22,10 @@ LOG_DIR = Path(__file__).resolve().parent / "logs"
 LOG_DIR.mkdir(exist_ok=True)
 
 sys.path.append(str(SRC_DIR / "ingestion"))
-from ocr_pipline import ingest_pdf 
+from ocr_pipline import ingest_pdf  
 
 CONFIDENCE_THRESHOLD = 0.60
-CHUNK_WORD_SIZE = 150 
+CHUNK_WORD_SIZE = 150  
 
 logging.basicConfig(
     level=logging.INFO,
@@ -70,7 +70,7 @@ ENTITY_LABELS = {"ORG", "DATE", "MONEY", "GPE", "LAW"}
 
 @app.on_event("startup")
 def load_model():
-    global tokenizer, model, nlp
+    global tokenizer, model, nlp, embedder, pinecone_index
     logger.info(f"Loading fine-tuned model from {MODEL_DIR} ...")
     tokenizer = AutoTokenizer.from_pretrained(str(MODEL_DIR))
     model = AutoModelForSequenceClassification.from_pretrained(str(MODEL_DIR))
@@ -78,19 +78,26 @@ def load_model():
     logger.info("Model loaded.")
     logger.info("Loading spaCy model for entity extraction ...")
     nlp = spacy.load("en_core_web_sm")
-    logger.info("spaCy loaded. Startup complete.")
+    logger.info("spaCy loaded.")
 
 
-def get_search_components():
-    global embedder, pinecone_index
-    if embedder is None or pinecone_index is None:
-        api_key = os.environ.get("PINECONE_API_KEY")
-        if not api_key:
-            raise HTTPException(status_code=503, detail="PINECONE_API_KEY environment variable is not set.")
+    api_key = os.environ.get("PINECONE_API_KEY")
+    if api_key:
+        logger.info(f"Loading embedding model: {EMBEDDING_MODEL} ...")
         from pinecone import Pinecone
         from sentence_transformers import SentenceTransformer
         embedder = SentenceTransformer(EMBEDDING_MODEL)
         pinecone_index = Pinecone(api_key=api_key).Index(INDEX_NAME)
+        logger.info("Embedding model + Pinecone index ready.")
+    else:
+        logger.warning("PINECONE_API_KEY not set — /search will be unavailable until it's provided.")
+
+    logger.info("Startup complete.")
+
+
+def get_search_components():
+    if embedder is None or pinecone_index is None:
+        raise HTTPException(status_code=503, detail="Search is unavailable: PINECONE_API_KEY was not set at startup.")
     return embedder, pinecone_index
 
 
@@ -99,6 +106,7 @@ def extract_entities(text: str) -> list:
     seen, entities = set(), []
     for ent in doc.ents:
         key = (ent.text, ent.label_)
+    
         if ent.label_ in ENTITY_LABELS and key not in seen and len(ent.text) <= 60:
             seen.add(key)
             entities.append({"text": ent.text, "label": ent.label_})

@@ -74,7 +74,7 @@ def main():
 
     
     needs_review_count = sum(1 for r in results if r["status"] == "needs_review")
-    print(f"\n Confidence threshold = {CONFIDENCE_THRESHOLD} ")
+    print(f"\n Confidence threshold = {CONFIDENCE_THRESHOLD} l")
     print(f"{needs_review_count}/{len(results)} predictions flagged 'needs_review' "
           f"({100 * needs_review_count / len(results):.1f}%)")
     print(f"Average confidence: {np.mean(all_confidences):.4f}")
